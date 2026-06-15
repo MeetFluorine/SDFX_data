@@ -783,15 +783,20 @@ function handleFile(file) {
   reader.onload = e => {
     try {
       const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
+      const TARGET_SHEET = 'Data_1';
+      if (!wb.SheetNames.includes(TARGET_SHEET)) {
+        toast(`❌ Sheet "${TARGET_SHEET}" not found. Available sheets: ${wb.SheetNames.join(', ')}`, 'error');
+        return;
+      }
+      const ws = wb.Sheets[TARGET_SHEET];
       rawData = XLSX.utils.sheet_to_json(ws, { defval: '' });
-      if (!rawData.length) { toast('File is empty or unreadable', 'error'); return; }
+      if (!rawData.length) { toast(`Sheet "${TARGET_SHEET}" is empty or has no data rows`, 'error'); return; }
       headers = Object.keys(rawData[0]);
       normaliseData();
       filteredData = [...rawData];
       displayData = [...filteredData];
       initDashboard();
-      toast(`✅ ${rawData.length.toLocaleString()} rows loaded from "${file.name}"`, 'success');
+      toast(`✅ ${rawData.length.toLocaleString()} rows loaded from sheet "${TARGET_SHEET}" in "${file.name}"`, 'success');
       document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
       document.getElementById('dataPill').textContent = rawData.length + ' rows';
     } catch(err) {
